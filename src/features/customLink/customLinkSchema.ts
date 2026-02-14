@@ -12,6 +12,7 @@ const customLinkItemSchema = z.object( {
     match: z.string(),
     name: messageStringMinMax(10, 100),
     url: messageStringMinMax(10, 200),
+    enabled: z.boolean().default(true),
 });
 
 export const customLinkCollectionSchema = z.object({
@@ -28,13 +29,7 @@ export type CustomLinkCollection = {
     url: string;
 }
 
-export type CustomLinkItem = {
-    id: string;
-    group: string;
-    match: string;
-    name: string;
-    url: string;
-}
+export type CustomLinkItem = z.infer<typeof customLinkItemSchema>;
 
 export type customLinkFetchJsonSchema = z.infer<typeof customLinkCollectionSchema>;
 

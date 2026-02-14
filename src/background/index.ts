@@ -1,6 +1,6 @@
 import { timesOnInstalled } from "../features/times/times";
 import { languagesOnInstalled } from "../features/languages/languages";
-import { customLinkCollectionOnInstalled } from "../features/customLink/customLink";
+import { customLinkCollectionOnInstalled, updateCustomLinkCollectionOnAlarm} from "../features/customLink/customLink";
 import { collectionBucketClear, itemBucketClear } from "../features/test/storageAPI";
 
 chrome.runtime.onInstalled.addListener(async (detail) => {
