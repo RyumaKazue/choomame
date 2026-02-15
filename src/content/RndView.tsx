@@ -29,10 +29,6 @@ export default function RndView(props: Props) {
       y: windowHeight - defaultBoxHeight - marginXY,
     }
   );
-  //　初期位置
-  useEffect(() => {
-    setBoxState((prev) => ({ ...prev, y: 150 }));
-  }, []);
 
   // 子要素サイズに合わせて自動リサイズ
   useEffect(() => {
@@ -42,41 +38,17 @@ export default function RndView(props: Props) {
     }
 
     const resizeToContent = () => {
-      const measuredWidth = Math.round(node.getBoundingClientRect().width);
       const measuredHeight = Math.round(node.getBoundingClientRect().height);
-      const maxWidth = Math.max(defaultBoxWidth, windowWidth - marginXY * 2);
-      const maxHeight = Math.max(defaultBoxHeight, windowHeight - marginXY * 2);
 
-      const nextWidth = Math.min(maxWidth, Math.max(defaultBoxWidth, measuredWidth));
-      const nextHeight = Math.min(maxHeight, Math.max(defaultBoxHeight, measuredHeight));
+      let newY = boxState.y;
+      if(boxState.y + measuredHeight + marginXY > windowHeight){
+        newY = windowHeight - measuredHeight - marginXY;
+      }
 
-      setBoxState((prev) => {
-        let nextX = prev.x;
-        let nextY = prev.y;
-
-        if (nextX + nextWidth + marginXY > windowWidth) {
-          nextX = windowWidth - nextWidth - marginXY;
-        }
-        if (nextY + nextHeight + marginXY > windowHeight) {
-          nextY = windowHeight - nextHeight - marginXY;
-        }
-
-        if (
-          prev.width === nextWidth &&
-          prev.height === nextHeight &&
-          prev.x === nextX &&
-          prev.y === nextY
-        ) {
-          return prev;
-        }
-
-        return {
-          ...prev,
-          width: nextWidth,
-          height: nextHeight,
-          x: nextX,
-          y: nextY,
-        };
+      setBoxState({
+        ...boxState,
+        height: measuredHeight,
+        y: newY
       });
     };
 
@@ -88,7 +60,7 @@ export default function RndView(props: Props) {
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [windowWidth, windowHeight]);
+  }, []);
 
   // ウィンドウサイズ変更時の位置調整
   useEffect(() => {

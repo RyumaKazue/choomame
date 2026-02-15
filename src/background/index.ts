@@ -1,6 +1,6 @@
 import { timesOnInstalled } from "../features/times/times";
 import { languagesOnInstalled } from "../features/languages/languages";
-import { customLinkCollectionOnInstalled, customCollectionItemsOnInstalled} from "../features/customLink/customLink";
+import { customLinkCollectionOnInstalled, customCollectionItemsOnInstalled, updateCustomLinkCollectionOnAlarm} from "../features/customLink/customLink";
 import { collectionBucketClear, itemBucketClear, hasCollectionBucket, hasItemBucket } from "../features/test/storageAPI";
 
 chrome.runtime.onInstalled.addListener(async (detail) => {
@@ -28,14 +28,14 @@ chrome.runtime.onInstalled.addListener(async (detail) => {
         await hasItemBucket();
     }
 
-    // chrome.alarms.create("updateCheck", {
-    //     periodInMinutes: 1440, // 24時間に1回
-    // });
+    chrome.alarms.create("updateCheck", {
+        periodInMinutes: 1440, // 24時間に1回
+    });
 });
 
-// chrome.alarms.onAlarm.addListener(async (alarm) => {
-//     if (alarm.name === "updateCheck") {
-//         await updateCustomLinkCollectionOnAlarm();
-//     }
-// });
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === "updateCheck") {
+        await updateCustomLinkCollectionOnAlarm();
+    }
+});
 

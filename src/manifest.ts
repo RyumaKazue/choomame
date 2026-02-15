@@ -8,6 +8,8 @@ export default defineManifest(
         "background": {
             "service_worker": "src/background/index.ts"
         },
+        "options_page": "index.html"
+        ,
         "action": {
             "default_popup": "src/popup/index.html"
         },
@@ -18,7 +20,7 @@ export default defineManifest(
             },
         ],
         "permissions": [
-            "storage"
+            "storage", "alarms"
         ]
     }
 )
