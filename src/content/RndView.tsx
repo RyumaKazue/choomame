@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import useWindowSize from "react-use/lib/useWindowSize";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 
 type Props = {
@@ -19,6 +19,7 @@ export default function RndView(props: Props) {
   const defaultBoxWidth = 500;
   const defaultBoxHeight = 400;
   const marginXY = 20;
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   const [boxState, setBoxState] = useState<BoxState>(
     {
@@ -30,20 +31,79 @@ export default function RndView(props: Props) {
   );
   //　初期位置
   useEffect(() => {
-    setBoxState({ ...boxState, y: 150 });
+    setBoxState((prev) => ({ ...prev, y: 150 }));
   }, []);
+
+  // 子要素サイズに合わせて自動リサイズ
+  useEffect(() => {
+    const node = contentRef.current;
+    if (!node) {
+      return;
+    }
+
+    const resizeToContent = () => {
+      const measuredWidth = Math.round(node.getBoundingClientRect().width);
+      const measuredHeight = Math.round(node.getBoundingClientRect().height);
+      const maxWidth = Math.max(defaultBoxWidth, windowWidth - marginXY * 2);
+      const maxHeight = Math.max(defaultBoxHeight, windowHeight - marginXY * 2);
+
+      const nextWidth = Math.min(maxWidth, Math.max(defaultBoxWidth, measuredWidth));
+      const nextHeight = Math.min(maxHeight, Math.max(defaultBoxHeight, measuredHeight));
+
+      setBoxState((prev) => {
+        let nextX = prev.x;
+        let nextY = prev.y;
+
+        if (nextX + nextWidth + marginXY > windowWidth) {
+          nextX = windowWidth - nextWidth - marginXY;
+        }
+        if (nextY + nextHeight + marginXY > windowHeight) {
+          nextY = windowHeight - nextHeight - marginXY;
+        }
+
+        if (
+          prev.width === nextWidth &&
+          prev.height === nextHeight &&
+          prev.x === nextX &&
+          prev.y === nextY
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          width: nextWidth,
+          height: nextHeight,
+          x: nextX,
+          y: nextY,
+        };
+      });
+    };
+
+    resizeToContent();
+
+    const observer = new ResizeObserver(() => {
+      resizeToContent();
+    });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [windowWidth, windowHeight]);
 
   // ウィンドウサイズ変更時の位置調整
   useEffect(() => {
-    let boxX = boxState.x;
-    let boxY = boxState.y;
-    if(boxState.x + boxState.width + marginXY > windowWidth){
-      boxX = windowWidth - boxState.width - marginXY;
-    }
-    if(boxState.y + boxState.height + marginXY > windowHeight){
-      boxY = windowHeight - boxState.height - marginXY;
-    }
-    setBoxState({ ...boxState, x: boxX, y: boxY });
+    setBoxState((prev) => {
+      let boxX = prev.x;
+      let boxY = prev.y;
+      if (prev.x + prev.width + marginXY > windowWidth) {
+        boxX = windowWidth - prev.width - marginXY;
+      }
+      if (prev.y + prev.height + marginXY > windowHeight) {
+        boxY = windowHeight - prev.height - marginXY;
+      }
+
+      return { ...prev, x: boxX, y: boxY };
+    });
 
   }, [windowWidth, windowHeight]);
 
@@ -55,7 +115,7 @@ export default function RndView(props: Props) {
       position={{ x: boxState.x, y: boxState.y }}
       style={{ backgroundColor: "lightcyan" }}
       onDragStop={(_: any, position: any) => {
-        setBoxState({...boxState, x: position.x, y: position.y });
+        setBoxState((prev) => ({ ...prev, x: position.x, y: position.y }));
       }}
       onResize={(_, __, ref, ___, position) => {
         setBoxState({
@@ -68,7 +128,7 @@ export default function RndView(props: Props) {
 
       }
     >
-      <Stack direction="column" alignItems="center">
+      <Stack ref={contentRef} direction="column" alignItems="center">
         {props.children}
       </Stack>
 

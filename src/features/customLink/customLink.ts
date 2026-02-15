@@ -5,6 +5,25 @@ import JSON5 from "json5";
 export const customLinkCollectionBucket = getBucket<CustomLinkCollectionBucket>("customLinkCollections")
 export const customLinkItemBucket = getBucket<CustomLinkItemBucket>("customLinkItems")
 
+export const fetchJsonFromUrl = async (url: string): Promise<customLinkFetchJsonSchema> => {
+    const text: string = await (await fetch(url)).text();
+    const json = JSON5.parse<customLinkFetchJsonSchema>(text);
+
+    const result = customLinkCollectionSchema.safeParse(json);
+
+    if(!result.success){
+        const messages = result.error.issues.map(issue => ({
+            property: issue.path.join("."),
+            message: issue.message,
+            code: issue.code,
+        }));
+
+        throw new Error(`Failed to parse custom link collection from ${url}: ${JSON.stringify(messages)}`);
+    }
+
+    return result.data;
+};
+
 export const customLinkCollectionOnInstalled = async () => {
     const keys = await customLinkCollectionBucket.getKeys();
 
@@ -12,11 +31,8 @@ export const customLinkCollectionOnInstalled = async () => {
         return;
     }
     for (const initialCustomLinkUrl of initialCustomLinkUrls) {
-        const text: string = await (await fetch(initialCustomLinkUrl)).text();
-        const object = JSON5.parse<customLinkFetchJsonSchema>(text);
-
-        const data = customLinkCollectionSchema.parse(object);
-        customLinkCollectionBucket.set({
+        const data = await fetchJsonFromUrl(initialCustomLinkUrl);
+        await customLinkCollectionBucket.set({
             [data.id]: {
                 id: data.id,
                 name: data.name,
@@ -27,20 +43,14 @@ export const customLinkCollectionOnInstalled = async () => {
 };
 
 export const customCollectionItemsOnInstalled = async () => {
-    if( (await customLinkCollectionBucket.getKeys()).length !== 0 ){
-        return;
-    }
-
     const collections = await customLinkCollectionBucket.get();
-    for( const value of Object.values(collections) ){   
-        const url = value.url;
-        const text: string = await (await fetch(url)).text();
-        const result = JSON5.parse<customLinkFetchJsonSchema>(text);
+    for( const collection of Object.values(collections) ){   
+        const result = await fetchJsonFromUrl(collection.url);
 
         for( const item of result.items ){
-            const itemId = `${value.id}/${item.id}`;
+            const itemId = `${collection.id}/${item.id}`;
             item.id = itemId;
-            customLinkCollectionBucket.set({
+            await customLinkItemBucket.set({
                 [item.id]: item
             });
         }
@@ -53,17 +63,7 @@ export const updateCustomLinkCollectionOnAlarm = async () => {
 
     for( const collection of Object.values(collections) ){
         const url = collection.url;
-        const text: string = await (await fetch(url)).text();
-        const object = JSON5.parse<customLinkFetchJsonSchema>(text);
-
-        const result = customLinkCollectionSchema.safeParse(object);
-
-        if(!result.success){
-            console.error(`Failed to parse custom link collection from ${url}:`, result.error);
-            continue;
-        }
-
-        const data = result.data;
+        const data = await fetchJsonFromUrl(url);
         // コレクションに属しているアイテムを抽出
         let assignToCollection_Items: CustomLinkItemBucket = {};
         for( const [id, item] of Object.entries(itemBucket)){
@@ -122,3 +122,7 @@ export const updateCustomLinkCollectionOnAlarm = async () => {
         }
     }
 };
+
+export function toMatchWithDelimiter(match: string): RegExp {
+  return new RegExp("(^|\\s)(" + match + ")(\\s|$)", "i");
+}

@@ -17,10 +17,7 @@ export const getParam = (): Param => {
     a?.split(",").forEach(pair => {
         const [key, value] = pair.split(":");
         tbs[key] = value;
-    })
-
-    console.log("a: ", a);
-    console.log("tbs:", JSON.stringify(tbs));
+    });
 
     const param: Param = {
         url: url.href,
