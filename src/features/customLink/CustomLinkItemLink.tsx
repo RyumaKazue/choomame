@@ -23,7 +23,6 @@ export const CustomLinkItemLink: React.FC<Props> = ({ paramQuery }) => {
         const groupItems: Record<string, React.JSX.Element[]> = {};
 
         for (const item of Object.values(bucket)) {
-            console.log("item:", JSON.stringify(item));
             if (!item.enabled) {
                 continue;
             }
