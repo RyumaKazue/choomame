@@ -7,7 +7,7 @@ import { customLinkItemBucket } from "../features/customLink/customLink";
 export const App: React.FC = () => {
     const [query, setQuery] = useState("");
     const [bucket, setBucket] = useState<CustomLinkItemBucket>({});
-    const state = useAsync(async () => {
+    const {value: itemGroups} = useAsync(async () => {
         const groupItems: Record<string, React.JSX.Element[]> = {};
 
         for (const item of Object.values(bucket)) {
@@ -66,7 +66,7 @@ export const App: React.FC = () => {
             />
 
             <Stack direction="column" spacing={1} sx={{ p: 1, borderTop: 1, borderColor: "divider" }}>
-                {Object.entries(state.value ?? {}).map(([group, elements]) => (
+                {Object.entries(itemGroups ?? {}).map(([group, elements]) => (
                     <Stack key={group} direction="column" border={1} borderColor="divider" justifyContent="flex-start" p={1}>
                         <Typography variant="subtitle2" sx={{ p: 1, borderBottom: 1, borderColor: "divider" }}>
                             {group}
