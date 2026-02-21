@@ -18,7 +18,7 @@ export default function RndView(props: Props) {
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const defaultBoxWidth = 500;
   const defaultBoxHeight = 400;
-  const marginXY = 20;
+  const marginXY = 25;
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   const [boxState, setBoxState] = useState<BoxState>(
